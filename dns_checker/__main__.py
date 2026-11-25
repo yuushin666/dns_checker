@@ -17,15 +17,14 @@ IFACE = find_iface_by_subnet(SVC_NET) if SVC_NET else '-'
 async def main(server: str, prev: bool | None) -> bool:
     """Возвращает текущий статус и уведомляет об изменении."""
     status = await check_dns(server)
-    if status == prev:
-        return status
-    new_status = get_status_str(status)
-    logger.info(f'DNS {server}: {get_status_str(prev)} -> {new_status}')
-    if IFACE != '-':
-        iface_status = await get_iface_status(IFACE)
-        if iface_status != status:
-            await set_iface(IFACE, new_status)
-    await send_report(f'Test: DNS {server} is {new_status}')
+    if prev and status != prev:
+        new_status = get_status_str(status)
+        logger.info(f'DNS {server}: {get_status_str(prev)} -> {new_status}')
+        if IFACE != '-':
+            iface_status = await get_iface_status(IFACE)
+            if iface_status != status:
+                await set_iface(IFACE, new_status)
+        await send_report(f'Test: DNS {server} is {new_status}')
     return status
 
 
