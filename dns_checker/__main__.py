@@ -33,7 +33,7 @@ async def main(server: str, prev: bool | None) -> bool:
         logger.info(f'DNS {server}: {get_status_str(prev)} -> {new_status}')
         if IFACE != '-':
             await set_iface(IFACE, server_status)
-        await send_report(f'Test: DNS {server} is {new_status}')
+        await send_report(f'DNS {server} is {new_status}')
     return server_status
 
 
