@@ -8,7 +8,7 @@ from .utils import get_logger, get_status_str, oneline
 logger = get_logger(__name__)
 
 
-async def nslookup(domain: str, server: str, delay: float = 0) -> None:
+async def nslookup(domain: str, server: str, delay: int = 0) -> None:
     await asyncio.sleep(delay)
     code, out, err = await shell_exec(
         f'nslookup -timeout=5 -retry=3 {domain} {server}')
@@ -21,7 +21,7 @@ async def nslookup(domain: str, server: str, delay: float = 0) -> None:
 async def check_dns(server: str) -> bool:
     domains = sample(DOMAINS, len(DOMAINS))
     tasks = [
-        asyncio.create_task(nslookup(domain, server, i * 0.1))
+        asyncio.create_task(nslookup(domain, server, i * 1))
         for i, domain in enumerate(domains)
     ]
 
