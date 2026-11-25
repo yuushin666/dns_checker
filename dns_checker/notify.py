@@ -17,14 +17,14 @@ async def send_request(
     try:
         async with session.post(url, json=payload) as response:
             if response.status != HTTPStatus.OK:
-                error = f'Вернулся статус {response.status}'
+                error = f'Unexpected status {response.status}'
                 body = await response.text()
                 logger.debug(f'{error}: {body[:50].replace(chr(10), " ")}')
                 raise Exception(error)
-        logger.info(f'Успешная отправка {report_type} ({payload})')
+        logger.info(f'Successfully sent {report_type} ({payload})')
 
     except Exception as error:
-        logger.error(f'Сбой отправки {report_type}: {error}')
+        logger.error(f'Failed to send {report_type}: {error}')
 
 
 async def send_sms(session: ClientSession, text: str) -> None:
@@ -32,7 +32,7 @@ async def send_sms(session: ClientSession, text: str) -> None:
         'message': text,
         'phones': sample(PHONES, len(PHONES))
     }
-    await send_request(session, SMS_URL, sms_data, 'СМС')
+    await send_request(session, SMS_URL, sms_data, 'SMS')
 
 
 async def send_tg(session: ClientSession, text: str) -> None:

@@ -8,10 +8,7 @@ def require_env(name: str, default: str | None = None) -> str:
     """Возвращает значение переменной или завершает программу."""
     value = os.getenv(name) or default
     if not value:
-        print(
-            f'Отсутствует переменная окружения {name}. '
-            'Программа принудительно остановлена.'
-        )
+        print(f'Missing environment variable: {name}. Exiting.')
         sys.exit(1)
     return value
 

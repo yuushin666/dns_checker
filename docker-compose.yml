@@ -9,7 +9,8 @@ networks:
         - subnet: ${SVC_NET}
 
 x-common: &common
-  build: .
+  image: yuushin666/dns-checker:latest
+  pull_policy: always
   cap_add:
     - NET_ADMIN
   cap_drop:

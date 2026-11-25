@@ -1,10 +1,11 @@
 import asyncio
 import ipaddress
+import re
 import subprocess
 from pathlib import Path
 
 from .config import WATCHDOG
-from .utils import get_logger, get_status_str
+from .utils import get_logger, get_status_str, oneline
 
 logger = get_logger(__name__)
 
@@ -45,12 +46,29 @@ def find_iface_by_subnet(prefix: str) -> str:
 
 
 async def get_iface_status(iface: str) -> bool:
-    code, out, _ = await shell_exec(f'ip -o link show dev {iface} | grep UP')
-    status = code == 0
+    code, out, err = await shell_exec(f'ip -o link show dev {iface}')
+    if code != 0:
+        raise RuntimeError(f'ip failed for {iface}: {oneline(err or out)}')
+    match = re.search(r'\bstate (\S+)', out)
+    if match is None:
+        raise RuntimeError(f'cannot parse state for {iface}: {oneline(out)}')
+    status = match.group(1) == 'UP'
     logger.debug(f'interface {iface} is {get_status_str(status)}')
     return status
 
 
-async def set_iface(iface: str, new_status: str) -> None:
-    await shell_exec(f'ip link set {iface} {new_status}')
-    logger.info(f'interface {iface} set to {new_status}')
+async def set_iface(iface: str, new_status: bool) -> None:
+    try:
+        iface_status = await get_iface_status(iface)
+        if iface_status != new_status:
+            status_str = get_status_str(new_status)
+            code, out, err = await shell_exec(
+                f'ip link set {iface} {status_str}')
+            if code != 0:
+                raise RuntimeError(
+                    f'ip link set {iface} {status_str} '
+                    f'failed: {oneline(err or out)}'
+                )
+            logger.info(f'interface {iface} set to {status_str}')
+    except Exception as error:
+        logger.error(f'Failed to set interface {iface}: {error}')
