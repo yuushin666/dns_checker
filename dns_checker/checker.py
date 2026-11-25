@@ -11,7 +11,7 @@ logger = get_logger(__name__)
 async def nslookup(domain: str, server: str, delay: int = 0) -> None:
     await asyncio.sleep(delay)
     code, out, err = await shell_exec(
-        f'nslookup -timeout=5 -retry=3 {domain} {server}')
+        f'nslookup -type=A -timeout=5 -retry=3 {domain} {server}')
     if code == 0 and 'timed out' in out.lower():
         logger.warning(f'{server}: first attempt timed out for {domain}')
     if code != 0:
