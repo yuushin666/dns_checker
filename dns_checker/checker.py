@@ -10,7 +10,7 @@ logger = get_logger(__name__)
 CONFIRM_DELAY = 5
 
 
-async def nslookup(domain: str, server: str, delay: int = 0) -> None:
+async def nslookup(domain: str, server: str, delay: int = 0) -> bool:
     await asyncio.sleep(delay)
     code, out, err = await shell_exec(
         f'nslookup -type=A -timeout=5 -retry=3 {domain} {server}')
@@ -18,7 +18,12 @@ async def nslookup(domain: str, server: str, delay: int = 0) -> None:
     if timeouts:
         logger.warning(f'{server}: {timeouts} timed out attempts for {domain}')
     if code != 0:
-        raise Exception(oneline(out.strip() or err.strip() or 'no output'))
+        logger.error(
+            f'NS lookup failed for {domain}: '
+            f'{oneline(out.strip() or err.strip() or 'no output')}'
+        )
+        return False
+    return True
 
 
 async def probe(server: str) -> bool:
@@ -29,20 +34,16 @@ async def probe(server: str) -> bool:
     ]
 
     results = await asyncio.gather(*tasks, return_exceptions=True)
-    resolved: list[str] = []
-    failed: list[str] = []
+    stats: dict[str, list[str]] = {'resolved': [], 'failed': []}
 
-    for domain, res in zip(domains, results):
-        if isinstance(res, Exception):
-            logger.error(f'NS lookup failed for {domain}: {oneline(str(res))}')
-            failed.append(domain)
-        else:
-            resolved.append(domain)
+    for domain, result in zip(domains, results):
+        list_name = 'resolved' if result else 'failed'
+        stats[list_name].append(domain)
 
-    status = bool(resolved)
+    status = bool(stats['resolved'])
     logger.info(
-        f'resolved: {resolved}, failed: {failed}, '
-        f'{len(resolved)}:{len(failed)}, server is {get_status_str(status)}'
+        f'{stats}, {len(stats['resolved'])}:{len(stats['failed'])}, '
+        f'server is {get_status_str(status)}'
     )
     return status
 
