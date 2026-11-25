@@ -9,7 +9,7 @@ networks:
         - subnet: ${SVC_NET}
 
 x-common: &common
-  image: yuushin666/dns-checker:latest
+  image: yuushin666/dns_checker:latest
   pull_policy: always
   cap_add:
     - NET_ADMIN

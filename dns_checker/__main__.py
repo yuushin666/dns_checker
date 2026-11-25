@@ -28,7 +28,7 @@ async def wait_for_sync() -> None:
 async def main(server: str, prev: bool | None) -> bool:
     """Возвращает текущий статус и уведомляет об изменении."""
     server_status = await check_dns(server)
-    if prev and server_status != prev:
+    if prev is not None and server_status != prev:
         new_status = get_status_str(server_status)
         logger.info(f'DNS {server}: {get_status_str(prev)} -> {new_status}')
         if IFACE != '-':
