@@ -7,21 +7,24 @@ from .utils import get_logger, get_status_str, oneline
 
 logger = get_logger(__name__)
 
+CONFIRM_DELAY = 5
+
 
 async def nslookup(domain: str, server: str, delay: int = 0) -> None:
     await asyncio.sleep(delay)
     code, out, err = await shell_exec(
         f'nslookup -type=A -timeout=5 -retry=3 {domain} {server}')
-    if code == 0 and 'timed out' in out.lower():
-        logger.warning(f'{server}: first attempt timed out for {domain}')
+    timeouts = out.lower().count('timed out')
+    if timeouts:
+        logger.warning(f'{server}: {timeouts} timed out attempts for {domain}')
     if code != 0:
         raise Exception(oneline(out.strip() or err.strip() or 'no output'))
 
 
-async def check_dns(server: str) -> bool:
+async def probe(server: str) -> bool:
     domains = sample(DOMAINS, len(DOMAINS))
     tasks = [
-        asyncio.create_task(nslookup(domain, server, i * 1))
+        asyncio.create_task(nslookup(domain, server, i))
         for i, domain in enumerate(domains)
     ]
 
@@ -41,4 +44,17 @@ async def check_dns(server: str) -> bool:
         f'resolved: {resolved}, failed: {failed}, '
         f'{len(resolved)}:{len(failed)}, server is {get_status_str(status)}'
     )
+    return status
+
+
+async def check_dns(server: str) -> bool:
+    status = await probe(server)
+    if not status:
+        logger.warning(
+            f'{server}: probe failed, confirming in {CONFIRM_DELAY}s'
+        )
+        await asyncio.sleep(CONFIRM_DELAY)
+        status = await probe(server)
+        if status:
+            logger.info(f'{server}: recovered on confirmation probe')
     return status
