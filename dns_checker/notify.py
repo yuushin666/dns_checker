@@ -4,9 +4,9 @@ from random import sample
 
 from aiohttp import ClientSession
 
-from config import BOT_ID, CHAT_ID, PHONES, SMS_URL, TG_PROXY, TIMEOUT
-from net import shell_exec
-from utils import get_logger
+from .config import BOT_ID, CHAT_ID, PHONES, SMS_URL, TG_PROXY, TIMEOUT
+from .net import shell_exec
+from .utils import get_logger
 
 logger = get_logger(__name__)
 

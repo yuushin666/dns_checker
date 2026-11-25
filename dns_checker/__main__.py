@@ -4,11 +4,11 @@ import datetime
 import sys
 import time
 
-from checker import check_dns
-from config import RETRY_PERIOD, SERVER, SVC_NET, SYNC_SEC
-from net import find_iface_by_subnet, get_iface_status, set_iface
-from notify import send_report
-from utils import get_logger, get_status_str, setup_logging
+from .checker import check_dns
+from .config import RETRY_PERIOD, SERVER, SVC_NET, SYNC_SEC
+from .net import find_iface_by_subnet, get_iface_status, set_iface
+from .notify import send_report
+from .utils import get_logger, get_status_str, setup_logging
 
 logger = get_logger('main')
 IFACE = find_iface_by_subnet(SVC_NET) if SVC_NET else '-'

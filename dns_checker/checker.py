@@ -1,9 +1,9 @@
 import asyncio
 from random import sample
 
-from config import DOMAINS
-from net import shell_exec
-from utils import get_logger, get_status_str, oneline
+from .config import DOMAINS
+from .net import shell_exec
+from .utils import get_logger, get_status_str, oneline
 
 logger = get_logger(__name__)
 

@@ -3,8 +3,8 @@ import ipaddress
 import subprocess
 from pathlib import Path
 
-from config import WATCHDOG
-from utils import get_logger, get_status_str
+from .config import WATCHDOG
+from .utils import get_logger, get_status_str
 
 logger = get_logger(__name__)
 
