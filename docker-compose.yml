@@ -1,0 +1,49 @@
+networks:
+  svc:
+    name: dns_checker_svc
+    driver: macvlan
+    driver_opts:
+      parent: ${SVC_PARENT}
+    ipam:
+      config:
+        - subnet: ${SVC_NET}
+
+x-common: &common
+  build: .
+  cap_add:
+    - NET_ADMIN
+  cap_drop:
+    - ALL
+  security_opt:
+    - no-new-privileges:true
+  restart: unless-stopped
+  env_file: .env
+
+services:
+  dns-watch1:
+    container_name: dns-watch1
+    <<: *common
+    environment:
+      SERVER: ${SERVER1}
+    networks:
+      default: {}
+      svc:
+        ipv4_address: ${SVC_IP1}
+
+  dns-watch2:
+    container_name: dns-watch2
+    <<: *common
+    environment:
+      SERVER: ${SERVER2}
+    networks:
+      default: {}
+      svc:
+        ipv4_address: ${SVC_IP2}
+
+  dns-watch3:
+    container_name: dns-watch3
+    <<: *common
+    environment:
+      SERVER: ${SERVER3}
+    networks:
+      default: {}
