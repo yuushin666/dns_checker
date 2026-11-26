@@ -44,8 +44,9 @@ async def main(server: str, prev: bool | None) -> bool | None:
             f'older: {older}, newer: {newer}, current: {current}, '
             f'confirmed: {confirmed}, prev: {prev}'
         )
-
+    logger.debug(f'history before: {history}')
     history.append(current)
+    logger.debug(f'history after: {history}')
 
     if prev is not None and confirmed != prev:
         new_status = get_status_str(confirmed)
