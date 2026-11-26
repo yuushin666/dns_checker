@@ -9,6 +9,8 @@ jobs:
   build_image_and_push_to_docker_hub:
     name: Push Docker image to DockerHub
     runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.VERSION }}
     steps:
       - name: Check out the repo
         uses: actions/checkout@v3

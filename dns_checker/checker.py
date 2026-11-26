@@ -1,7 +1,7 @@
 import asyncio
 from random import sample
 
-from .config import DOMAINS
+from .config import DOMAINS, NS_RETRY, NS_TIMEOUT
 from .net import shell_exec
 from .utils import get_logger, get_status_str, oneline
 
@@ -11,10 +11,13 @@ logger = get_logger(__name__)
 async def nslookup(domain: str, server: str, delay: int = 0) -> bool:
     await asyncio.sleep(delay)
     code, out, err = await shell_exec(
-        f'nslookup -type=A -timeout=5 -retry=3 {domain} {server}')
+        f'nslookup -type=A -timeout={NS_TIMEOUT} -retry={NS_RETRY} '
+        f'{domain} {server}'
+    )
     timeouts = out.lower().count('timed out')
     if timeouts:
-        logger.warning(f'{server}: {timeouts} timed out attempts for {domain}')
+        logger.warning(
+            f'{timeouts}/{NS_RETRY} timed out attempts for {domain}')
     if code != 0:
         logger.error(
             f'NS lookup failed for {domain}: '

@@ -18,6 +18,9 @@ RETRY_PERIOD = int(require_env('RETRY_PERIOD', '60'))
 WATCHDOG = int(require_env('WATCHDOG', '25'))
 TIMEOUT = ClientTimeout(float(require_env('TIMEOUT', '15')))
 
+NS_TIMEOUT = int(require_env('NS_TIMEOUT', '5'))
+NS_RETRY = int(require_env('NS_RETRY', '5'))
+
 DOMAINS = [d for d in require_env('DOMAINS').split(',') if d.strip()]
 SERVER = require_env('SERVER')
 SVC_NET = os.getenv('SVC_NET', '')

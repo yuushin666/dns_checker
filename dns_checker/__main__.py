@@ -40,14 +40,20 @@ async def main(server: str, prev: bool | None) -> bool | None:
         older, newer = history
         if current == newer and (current != older or prev is None):
             confirmed = current
+        logger.debug(
+            f'older: {older}, newer: {newer}, current: {current}, '
+            f'confirmed: {confirmed}, prev: {prev}'
+        )
 
     history.append(current)
 
     if prev is not None and confirmed != prev:
-        new_status = get_status_str(current)
-        logger.info(f'DNS {server}: {get_status_str(prev)} -> {new_status}')
-        if IFACE != '-':
-            await set_iface(IFACE, current)
+        new_status = get_status_str(confirmed)
+        logger.info(
+            f'confirmed status: {get_status_str(prev)} -> {new_status}'
+        )
+        if IFACE != '-' and confirmed is not None:
+            await set_iface(IFACE, confirmed)
         await send_report(f'DNS {server} is {new_status}')
 
     return confirmed
