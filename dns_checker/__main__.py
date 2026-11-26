@@ -1,5 +1,6 @@
 
 import asyncio
+from collections import deque
 import datetime
 import sys
 import time
@@ -12,6 +13,8 @@ from .utils import get_logger, get_status_str, setup_logging
 
 logger = get_logger('main')
 IFACE = find_iface_by_subnet(SVC_NET) if SVC_NET else '-'
+HISTORY_SIZE = 2
+history: deque[bool] = deque(maxlen=HISTORY_SIZE)
 
 
 async def wait_for_sync() -> None:
@@ -25,25 +28,38 @@ async def wait_for_sync() -> None:
     await asyncio.sleep(delay)
 
 
-async def main(server: str, prev: bool | None) -> bool:
-    """Возвращает текущий статус и уведомляет об изменении."""
-    server_status = await check_dns(server)
-    if prev is not None and server_status != prev:
-        new_status = get_status_str(server_status)
+async def main(server: str, prev: bool | None) -> bool | None:
+    """Подтверждает статус, если он совпадает с последним результатом и
+    отличается от предпоследнего (или это первая установленная база),
+    а также и уведомляет об изменении.
+    """
+    current = await check_dns(server)
+
+    confirmed = prev
+    if len(history) == 2:
+        older, newer = history
+        if current == newer and (current != older or prev is None):
+            confirmed = current
+
+    history.append(current)
+
+    if prev is not None and confirmed != prev:
+        new_status = get_status_str(current)
         logger.info(f'DNS {server}: {get_status_str(prev)} -> {new_status}')
         if IFACE != '-':
-            await set_iface(IFACE, server_status)
+            await set_iface(IFACE, current)
         await send_report(f'DNS {server} is {new_status}')
-    return server_status
+
+    return confirmed
 
 
 async def main_loop() -> None:
     await wait_for_sync()
-    prev: bool | None = None
+    prev_status: bool | None = None
     next_run = time.monotonic()
     while True:
         try:
-            prev = await main(SERVER, prev)
+            prev_status = await main(SERVER, prev_status)
         except Exception:
             logger.exception('Pass finished with error')
         next_run += RETRY_PERIOD

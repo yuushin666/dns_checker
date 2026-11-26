@@ -7,8 +7,6 @@ from .utils import get_logger, get_status_str, oneline
 
 logger = get_logger(__name__)
 
-CONFIRM_DELAY = 5
-
 
 async def nslookup(domain: str, server: str, delay: int = 0) -> bool:
     await asyncio.sleep(delay)
@@ -26,7 +24,7 @@ async def nslookup(domain: str, server: str, delay: int = 0) -> bool:
     return True
 
 
-async def probe(server: str) -> bool:
+async def check_dns(server: str) -> bool:
     domains = sample(DOMAINS, len(DOMAINS))
     tasks = [
         asyncio.create_task(nslookup(domain, server, i))
@@ -45,17 +43,4 @@ async def probe(server: str) -> bool:
         f'{stats}, {len(stats['resolved'])}:{len(stats['failed'])}, '
         f'server is {get_status_str(status)}'
     )
-    return status
-
-
-async def check_dns(server: str) -> bool:
-    status = await probe(server)
-    if not status:
-        logger.warning(
-            f'{server}: probe failed, confirming in {CONFIRM_DELAY}s'
-        )
-        await asyncio.sleep(CONFIRM_DELAY)
-        status = await probe(server)
-        if status:
-            logger.info(f'{server}: recovered on confirmation probe')
     return status
